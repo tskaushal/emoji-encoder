@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hide a message in an emoji</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Hide a message in an emoji</h1>
+        <p class="description">
+            This tool allows you to encode a hidden message into an emoji or alphabet letter. 
+            You can copy and paste text with a hidden message in it to decode the message.
+        </p>
+        
+        <div class="toggle-container">
+            <span class="toggle-label">Decode</span>
+            <div class="toggle-switch active" id="modeToggle" onclick="toggleMode()">
+                <div class="toggle-slider"></div>
+            </div>
+            <span class="toggle-label">Encode</span>
+        </div>
+        
+        <div id="encode-section" class="section active">
+            <div class="input-group">
+                <label>Enter text to encode</label>
+                <textarea id="encode-text" placeholder="Type your secret message..."></textarea>
+            </div>
+            
+            <div class="emoji-picker">
+                <label>Pick an emoji</label>
+                <div class="emoji-grid" id="emoji-grid"></div>
+            </div>
+            
+            <div class="letter-section">
+                <label>Or pick a standard alphabet letter</label>
+                <div class="letter-grid" id="letter-grid"></div>
+            </div>
+            
+            <button class="action-btn" onclick="encodeMessage()">Encode</button>
+            
+            <div id="encode-result" class="result">
+                <div class="result-emoji" id="result-display"></div>
+            </div>
+        </div>
+        
+        <div id="decode-section" class="section">
+            <div class="input-group">
+                <label>Paste encoded text</label>
+                <textarea id="decode-text" placeholder="Paste the encoded emoji or letter here..."></textarea>
+            </div>
+            
+            <button class="action-btn" onclick="decodeMessage()">Decode</button>
+            
+            <div id="decode-result" class="result">
+                <div class="result-text" id="decoded-display"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <a href="https://github.com" target="_blank">Source on GitHub</a>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
