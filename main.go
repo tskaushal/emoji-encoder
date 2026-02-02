@@ -1,17 +1,11 @@
 package main
 
 import (
-	"embed"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-)
-
-var (
-	//go:embed static/*
-	staticFS embed.FS
 )
 
 const variationSelectorBase = 0xE0100
@@ -30,7 +24,8 @@ func fromVariationSelector(r rune) (byte, bool) {
 func Encode(emoji, text string) string {
 	var result strings.Builder
 	result.WriteString(emoji)
-	for _, b := range []byte(text) {
+	bytes := []byte(text)
+	for _, b := range bytes {
 		result.WriteRune(toVariationSelector(b))
 	}
 	return result.String()
@@ -38,12 +33,32 @@ func Encode(emoji, text string) string {
 
 func Decode(text string) string {
 	var decoded []byte
-	for _, r := range []rune(text) {
+	runes := []rune(text)
+	for _, r := range runes {
 		if b, ok := fromVariationSelector(r); ok {
 			decoded = append(decoded, b)
+		} else if len(decoded) > 0 {
+			break
 		}
 	}
 	return string(decoded)
+}
+
+type EncodeRequest struct {
+	Emoji string `json:"emoji"`
+	Text  string `json:"text"`
+}
+
+type EncodeResponse struct {
+	Encoded string `json:"encoded"`
+}
+
+type DecodeRequest struct {
+	Text string `json:"text"`
+}
+
+type DecodeResponse struct {
+	Decoded string `json:"decoded"`
 }
 
 func encodeHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,14 +66,15 @@ func encodeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var req struct {
-		Emoji string `json:"emoji"`
-		Text  string `json:"text"`
+	var req EncodeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
 	}
-	json.NewDecoder(r.Body).Decode(&req)
-	json.NewEncoder(w).Encode(map[string]string{
-		"encoded": Encode(req.Emoji, req.Text),
-	})
+	encoded := Encode(req.Emoji, req.Text)
+	resp := EncodeResponse{Encoded: encoded}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }
 
 func decodeHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,25 +82,28 @@ func decodeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var req struct {
-		Text string `json:"text"`
+	var req DecodeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
 	}
-	json.NewDecoder(r.Body).Decode(&req)
-	json.NewEncoder(w).Encode(map[string]string{
-		"decoded": Decode(req.Text),
-	})
+	decoded := Decode(req.Text)
+	resp := DecodeResponse{Decoded: decoded}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }
 
 func main() {
+	// Serve static files
 	http.Handle("/static/",
 		http.StripPrefix("/static/",
-			http.FileServer(http.FS(staticFS)),
+			http.FileServer(http.Dir("static")),
 		),
 	)
 
+	// Serve index.html
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data, _ := staticFS.ReadFile("static/index.html")
-		w.Write(data)
+		http.ServeFile(w, r, "static/index.html")
 	})
 
 	http.HandleFunc("/api/encode", encodeHandler)
@@ -95,5 +114,6 @@ func main() {
 		port = "8080"
 	}
 
+	log.Println("Server running on port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
