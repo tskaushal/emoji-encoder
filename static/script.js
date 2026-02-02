@@ -106,4 +106,4 @@ async function decodeMessage() {
 }
 
 initEmojiGrid();
-initLetterGrid();
+initLetterGrid();   

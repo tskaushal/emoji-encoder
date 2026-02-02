@@ -94,14 +94,13 @@ func decodeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Serve static files
+
 	http.Handle("/static/",
 		http.StripPrefix("/static/",
 			http.FileServer(http.Dir("static")),
 		),
 	)
 
-	// Serve index.html
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/index.html")
 	})
