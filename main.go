@@ -94,6 +94,7 @@ func decodeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 	http.HandleFunc("/api/encode", encodeHandler)
@@ -103,6 +104,8 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	http.ListenAndServe(":"+port, nil)
 
 	log.Printf("Server running on port %s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
